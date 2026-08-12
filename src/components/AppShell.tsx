@@ -1,16 +1,28 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { toast } from "sonner";
 import {
   LayoutDashboard,
   GraduationCap,
   Users,
   BookOpen,
   ClipboardList,
-  Bell,
-  Search,
+  LogOut,
+  RotateCcw,
+  UserCog,
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { GlobalSearch } from "@/components/GlobalSearch";
+import { NotificationsMenu } from "@/components/NotificationsMenu";
+import { useSchool } from "@/lib/school-store";
 
 const nav = [
   { to: "/", label: "Painel", icon: LayoutDashboard },
@@ -23,12 +35,16 @@ const nav = [
 export function AppShell({
   title,
   subtitle,
+  actions,
   children,
 }: {
   title: string;
   subtitle: string;
+  actions?: ReactNode;
   children: ReactNode;
 }) {
+  const { reset } = useSchool();
+
   return (
     <div className="flex min-h-screen bg-background">
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col bg-sidebar px-4 py-6 text-sidebar-foreground md:flex">
@@ -70,22 +86,43 @@ export function AppShell({
             <h1 className="truncate text-2xl font-semibold">{title}</h1>
             <p className="truncate text-sm text-muted-foreground">{subtitle}</p>
           </div>
-          <div className="relative hidden w-64 lg:block">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder="Buscar aluno, turma..." className="pl-9" />
-          </div>
-          <button
-            aria-label="Notificações"
-            className="relative rounded-lg border border-border p-2 text-muted-foreground transition-colors hover:bg-muted"
-          >
-            <Bell className="size-4" />
-            <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-accent" />
-          </button>
-          <Avatar className="size-9">
-            <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-              MS
-            </AvatarFallback>
-          </Avatar>
+          <GlobalSearch />
+          <NotificationsMenu />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button aria-label="Conta">
+                <Avatar className="size-9">
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                    MS
+                  </AvatarFallback>
+                </Avatar>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>
+                Maria Silva
+                <span className="block text-xs font-normal text-muted-foreground">
+                  Secretaria acadêmica
+                </span>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => toast.info("Perfil disponível em breve.")}>
+                <UserCog className="size-4" /> Meu perfil
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => {
+                  reset();
+                  toast.success("Dados de demonstração restaurados.");
+                }}
+              >
+                <RotateCcw className="size-4" /> Restaurar dados demo
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => toast.info("Sessão encerrada (protótipo).")}>
+                <LogOut className="size-4" /> Sair
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </header>
 
         <nav className="flex gap-1 overflow-x-auto border-b border-border px-4 py-2 md:hidden">
@@ -101,6 +138,10 @@ export function AppShell({
             </Link>
           ))}
         </nav>
+
+        {actions && (
+          <div className="flex flex-wrap gap-2 border-b border-border px-6 py-3">{actions}</div>
+        )}
 
         <main className="flex-1 px-6 py-6">{children}</main>
       </div>
