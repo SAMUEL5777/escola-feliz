@@ -46,7 +46,7 @@ function initialState(): State {
     turmas: turmasSeed,
     agenda: agendaSeed.map((a, i) => ({ id: `E${i}`, ...a })),
     notas: notasSeed.map((n, i) => ({
-      alunoId: alunosSeed[i].id,
+      alunoId: alunosSeed[i]?.id ?? String(i),
       bimestres: n.bimestres,
     })),
     notificacoes: [
