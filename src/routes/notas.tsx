@@ -1,8 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -12,7 +23,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { notas, alunos } from "@/lib/school-data";
+import { Minus, Plus, Save } from "lucide-react";
+import { useSchool } from "@/lib/school-store";
 
 export const Route = createFileRoute("/notas")({
   head: () => ({
@@ -34,8 +46,35 @@ export const Route = createFileRoute("/notas")({
 });
 
 function Notas() {
+  const { alunos, notas, turmas, setNota, setFrequencia } = useSchool();
+  const [turma, setTurma] = useState("Todas");
+
+  const visiveis = alunos.filter((a) => turma === "Todas" || a.turma === turma);
+
   return (
     <AppShell title="Notas & Frequência" subtitle="Lançamentos do 2º bimestre">
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <Select value={turma} onValueChange={setTurma}>
+          <SelectTrigger className="w-44">
+            <SelectValue placeholder="Turma" />
+          </SelectTrigger>
+          <SelectContent>
+            {["Todas", ...turmas.map((t) => t.nome)].map((t) => (
+              <SelectItem key={t} value={t}>
+                {t}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button
+          size="sm"
+          className="ml-auto"
+          onClick={() => toast.success("Lançamentos salvos no diário de classe.")}
+        >
+          <Save className="size-4" /> Salvar lançamentos
+        </Button>
+      </div>
+
       <Tabs defaultValue="notas">
         <TabsList>
           <TabsTrigger value="notas">Notas</TabsTrigger>
@@ -46,9 +85,11 @@ function Notas() {
           <Card className="shadow-soft">
             <CardHeader>
               <CardTitle>Boletim por bimestre</CardTitle>
-              <CardDescription>Média geral considera os quatro bimestres</CardDescription>
+              <CardDescription>
+                Clique em uma nota para editar — a média e a situação são recalculadas
+              </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -62,15 +103,25 @@ function Notas() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {notas.map((n) => {
-                    const media = n.bimestres.reduce((s, v) => s + v, 0) / 4;
+                  {visiveis.map((a) => {
+                    const registro = notas.find((n) => n.alunoId === a.id);
+                    const bimestres = registro?.bimestres ?? [0, 0, 0, 0];
+                    const media = bimestres.reduce((s, v) => s + v, 0) / bimestres.length;
                     return (
-                      <TableRow key={n.aluno}>
-                        <TableCell className="font-medium">{n.aluno}</TableCell>
-                        <TableCell>{n.turma}</TableCell>
-                        {n.bimestres.map((b, i) => (
-                          <TableCell key={i} className="text-right tabular-nums">
-                            {b.toFixed(1)}
+                      <TableRow key={a.id}>
+                        <TableCell className="font-medium">{a.nome}</TableCell>
+                        <TableCell>{a.turma}</TableCell>
+                        {bimestres.map((b, i) => (
+                          <TableCell key={i} className="text-right">
+                            <Input
+                              type="number"
+                              min={0}
+                              max={10}
+                              step="0.1"
+                              value={b}
+                              onChange={(e) => setNota(a.id, i, Number(e.target.value))}
+                              className="ml-auto h-8 w-20 text-right tabular-nums"
+                            />
                           </TableCell>
                         ))}
                         <TableCell className="text-right">
@@ -81,6 +132,13 @@ function Notas() {
                       </TableRow>
                     );
                   })}
+                  {visiveis.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
+                        Nenhum aluno nesta turma.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
@@ -89,7 +147,7 @@ function Notas() {
 
         <TabsContent value="frequencia" className="mt-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            {alunos.map((a) => (
+            {visiveis.map((a) => (
               <Card key={a.id} className="shadow-soft">
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between gap-2">
@@ -102,11 +160,29 @@ function Notas() {
                       {a.frequencia}%
                     </span>
                   </div>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    {a.frequencia >= 75
-                      ? "Frequência regular"
-                      : "Abaixo do mínimo legal de 75%"}
-                  </p>
+                  <div className="mt-3 flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      aria-label={`Registrar falta de ${a.nome}`}
+                      onClick={() => setFrequencia(a.id, a.frequencia - 2)}
+                    >
+                      <Minus className="size-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      aria-label={`Registrar presença de ${a.nome}`}
+                      onClick={() => setFrequencia(a.id, a.frequencia + 2)}
+                    >
+                      <Plus className="size-4" />
+                    </Button>
+                    <p className="text-xs text-muted-foreground">
+                      {a.frequencia >= 75
+                        ? "Frequência regular"
+                        : "Abaixo do mínimo legal de 75%"}
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
             ))}
