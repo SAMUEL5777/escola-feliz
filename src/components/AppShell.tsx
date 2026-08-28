@@ -1,5 +1,5 @@
-import { Link } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, type ReactNode } from "react";
 import { toast } from "sonner";
 import {
   LayoutDashboard,
@@ -10,6 +10,10 @@ import {
   LogOut,
   RotateCcw,
   UserCog,
+  CalendarCheck,
+  MessageSquare,
+  Wallet,
+  FileText,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -23,14 +27,33 @@ import {
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { NotificationsMenu } from "@/components/NotificationsMenu";
 import { useSchool } from "@/lib/school-store";
+import { useAuth, rotulosPerfil, type Perfil } from "@/lib/auth-store";
 
 const nav = [
-  { to: "/", label: "Painel", icon: LayoutDashboard },
-  { to: "/alunos", label: "Alunos", icon: GraduationCap },
-  { to: "/professores", label: "Professores", icon: Users },
-  { to: "/turmas", label: "Turmas", icon: BookOpen },
-  { to: "/notas", label: "Notas & Frequência", icon: ClipboardList },
-] as const;
+  { to: "/", label: "Painel", icon: LayoutDashboard, perfis: ["secretaria", "professor", "responsavel"] },
+  { to: "/alunos", label: "Alunos", icon: GraduationCap, perfis: ["secretaria", "professor"] },
+  { to: "/professores", label: "Professores", icon: Users, perfis: ["secretaria"] },
+  { to: "/turmas", label: "Turmas", icon: BookOpen, perfis: ["secretaria", "professor"] },
+  { to: "/notas", label: "Notas & Frequência", icon: ClipboardList, perfis: ["secretaria", "professor"] },
+  { to: "/chamada", label: "Chamada diária", icon: CalendarCheck, perfis: ["secretaria", "professor"] },
+  { to: "/boletim", label: "Boletim & Histórico", icon: FileText, perfis: ["secretaria", "professor", "responsavel"] },
+  { to: "/financeiro", label: "Financeiro", icon: Wallet, perfis: ["secretaria", "responsavel"] },
+  { to: "/mensagens", label: "Mensagens", icon: MessageSquare, perfis: ["secretaria", "professor", "responsavel"] },
+] as const satisfies ReadonlyArray<{
+  to: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  perfis: ReadonlyArray<Perfil>;
+}>;
+
+function iniciais(nome: string) {
+  return nome
+    .split(" ")
+    .slice(0, 2)
+    .map((p) => p[0])
+    .join("")
+    .toUpperCase();
+}
 
 export function AppShell({
   title,
@@ -44,10 +67,26 @@ export function AppShell({
   children: ReactNode;
 }) {
   const { reset } = useSchool();
+  const { usuario, carregando, sair } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!carregando && !usuario) navigate({ to: "/login", replace: true });
+  }, [carregando, usuario, navigate]);
+
+  if (!usuario) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background text-sm text-muted-foreground">
+        Carregando…
+      </div>
+    );
+  }
+
+  const itens = nav.filter((n) => (n.perfis as ReadonlyArray<Perfil>).includes(usuario.perfil));
 
   return (
     <div className="flex min-h-screen bg-background">
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col bg-sidebar px-4 py-6 text-sidebar-foreground md:flex">
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col overflow-y-auto bg-sidebar px-4 py-6 text-sidebar-foreground md:flex print:hidden">
         <div className="flex items-center gap-3 px-2">
           <div className="flex size-10 items-center justify-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground">
             <GraduationCap className="size-5" />
@@ -59,7 +98,7 @@ export function AppShell({
         </div>
 
         <nav className="mt-8 flex flex-col gap-1">
-          {nav.map(({ to, label, icon: Icon }) => (
+          {itens.map(({ to, label, icon: Icon }) => (
             <Link
               key={to}
               to={to}
@@ -77,11 +116,14 @@ export function AppShell({
 
         <div className="mt-auto rounded-xl bg-sidebar-accent/50 p-4 text-xs leading-relaxed opacity-90">
           Ano letivo 2026 · 2º bimestre em andamento
+          <span className="mt-1 block opacity-80">
+            Acesso: {rotulosPerfil[usuario.perfil]}
+          </span>
         </div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-10 flex flex-wrap items-center gap-4 border-b border-border bg-background/85 px-6 py-4 backdrop-blur">
+        <header className="sticky top-0 z-10 flex flex-wrap items-center gap-4 border-b border-border bg-background/85 px-6 py-4 backdrop-blur print:hidden">
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-2xl font-semibold">{title}</h1>
             <p className="truncate text-sm text-muted-foreground">{subtitle}</p>
@@ -93,40 +135,49 @@ export function AppShell({
               <button aria-label="Conta">
                 <Avatar className="size-9">
                   <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                    MS
+                    {iniciais(usuario.nome)}
                   </AvatarFallback>
                 </Avatar>
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuContent align="end" className="w-60">
               <DropdownMenuLabel>
-                Maria Silva
+                {usuario.nome}
                 <span className="block text-xs font-normal text-muted-foreground">
-                  Secretaria acadêmica
+                  {rotulosPerfil[usuario.perfil]}
+                  {usuario.vinculo ? ` · ${usuario.vinculo}` : ""}
                 </span>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => toast.info("Perfil disponível em breve.")}>
                 <UserCog className="size-4" /> Meu perfil
               </DropdownMenuItem>
+              {usuario.perfil === "secretaria" && (
+                <DropdownMenuItem
+                  onSelect={() => {
+                    reset();
+                    toast.success("Dados de demonstração restaurados.");
+                  }}
+                >
+                  <RotateCcw className="size-4" /> Restaurar dados demo
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
               <DropdownMenuItem
                 onSelect={() => {
-                  reset();
-                  toast.success("Dados de demonstração restaurados.");
+                  sair();
+                  toast.success("Sessão encerrada.");
+                  navigate({ to: "/login", replace: true });
                 }}
               >
-                <RotateCcw className="size-4" /> Restaurar dados demo
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => toast.info("Sessão encerrada (protótipo).")}>
                 <LogOut className="size-4" /> Sair
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
 
-        <nav className="flex gap-1 overflow-x-auto border-b border-border px-4 py-2 md:hidden">
-          {nav.map(({ to, label }) => (
+        <nav className="flex gap-1 overflow-x-auto border-b border-border px-4 py-2 md:hidden print:hidden">
+          {itens.map(({ to, label }) => (
             <Link
               key={to}
               to={to}
@@ -140,7 +191,9 @@ export function AppShell({
         </nav>
 
         {actions && (
-          <div className="flex flex-wrap gap-2 border-b border-border px-6 py-3">{actions}</div>
+          <div className="flex flex-wrap gap-2 border-b border-border px-6 py-3 print:hidden">
+            {actions}
+          </div>
         )}
 
         <main className="flex-1 px-6 py-6">{children}</main>

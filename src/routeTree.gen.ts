@@ -11,6 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AlunosRouteImport } from './routes/alunos'
+import { Route as ChamadaRouteImport } from './routes/chamada'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as NotasRouteImport } from './routes/notas'
 import { Route as ProfessoresRouteImport } from './routes/professores'
 import { Route as TurmasRouteImport } from './routes/turmas'
@@ -23,6 +25,16 @@ const IndexRoute = IndexRouteImport.update({
 const AlunosRoute = AlunosRouteImport.update({
   id: '/alunos',
   path: '/alunos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChamadaRoute = ChamadaRouteImport.update({
+  id: '/chamada',
+  path: '/chamada',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NotasRoute = NotasRouteImport.update({
@@ -44,6 +56,8 @@ const TurmasRoute = TurmasRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/alunos': typeof AlunosRoute
+  '/chamada': typeof ChamadaRoute
+  '/login': typeof LoginRoute
   '/notas': typeof NotasRoute
   '/professores': typeof ProfessoresRoute
   '/turmas': typeof TurmasRoute
@@ -51,6 +65,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/alunos': typeof AlunosRoute
+  '/chamada': typeof ChamadaRoute
+  '/login': typeof LoginRoute
   '/notas': typeof NotasRoute
   '/professores': typeof ProfessoresRoute
   '/turmas': typeof TurmasRoute
@@ -59,21 +75,47 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/alunos': typeof AlunosRoute
+  '/chamada': typeof ChamadaRoute
+  '/login': typeof LoginRoute
   '/notas': typeof NotasRoute
   '/professores': typeof ProfessoresRoute
   '/turmas': typeof TurmasRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/alunos' | '/notas' | '/professores' | '/turmas'
+  fullPaths:
+    | '/'
+    | '/alunos'
+    | '/chamada'
+    | '/login'
+    | '/notas'
+    | '/professores'
+    | '/turmas'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/alunos' | '/notas' | '/professores' | '/turmas'
-  id: '__root__' | '/' | '/alunos' | '/notas' | '/professores' | '/turmas'
+  to:
+    | '/'
+    | '/alunos'
+    | '/chamada'
+    | '/login'
+    | '/notas'
+    | '/professores'
+    | '/turmas'
+  id:
+    | '__root__'
+    | '/'
+    | '/alunos'
+    | '/chamada'
+    | '/login'
+    | '/notas'
+    | '/professores'
+    | '/turmas'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AlunosRoute: typeof AlunosRoute
+  ChamadaRoute: typeof ChamadaRoute
+  LoginRoute: typeof LoginRoute
   NotasRoute: typeof NotasRoute
   ProfessoresRoute: typeof ProfessoresRoute
   TurmasRoute: typeof TurmasRoute
@@ -93,6 +135,20 @@ declare module '@tanstack/react-router' {
       path: '/alunos'
       fullPath: '/alunos'
       preLoaderRoute: typeof AlunosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chamada': {
+      id: '/chamada'
+      path: '/chamada'
+      fullPath: '/chamada'
+      preLoaderRoute: typeof ChamadaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/notas': {
@@ -122,6 +178,8 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AlunosRoute: AlunosRoute,
+  ChamadaRoute: ChamadaRoute,
+  LoginRoute: LoginRoute,
   NotasRoute: NotasRoute,
   ProfessoresRoute: ProfessoresRoute,
   TurmasRoute: TurmasRoute,
