@@ -13,14 +13,30 @@ import {
   turmas as turmasSeed,
   agenda as agendaSeed,
   notas as notasSeed,
+  aulas as aulasSeed,
+  mensalidades as mensalidadesSeed,
+  mensagens as mensagensSeed,
+  historico as historicoSeed,
   type Aluno,
   type Professor,
   type Turma,
+  type Aula,
+  type Mensalidade,
+  type Mensagem,
+  type RegistroHistorico,
 } from "@/lib/school-data";
 
 export type Evento = { id: string; data: string; titulo: string; tipo: string };
 export type Notificacao = { id: string; texto: string; lida: boolean; quando: string };
 export type NotasAluno = { alunoId: string; bimestres: number[] };
+export type Chamada = {
+  id: string;
+  data: string;
+  aulaId: string;
+  turma: string;
+  disciplina: string;
+  presencas: Record<string, boolean>;
+};
 
 type State = {
   alunos: Aluno[];
@@ -29,6 +45,11 @@ type State = {
   agenda: Evento[];
   notas: NotasAluno[];
   notificacoes: Notificacao[];
+  aulas: Aula[];
+  chamadas: Chamada[];
+  mensalidades: Mensalidade[];
+  mensagens: Mensagem[];
+  historico: RegistroHistorico[];
 };
 
 const STORAGE_KEY = "colegio-aurora-state-v1";
@@ -54,6 +75,11 @@ function initialState(): State {
       { id: "N2", texto: "Prova bimestral de Matemática marcada para 15/Ago.", lida: false, quando: "ontem" },
       { id: "N3", texto: "Boletins do 1º bimestre disponíveis para download.", lida: true, quando: "3 dias" },
     ],
+    aulas: aulasSeed,
+    chamadas: [],
+    mensalidades: mensalidadesSeed,
+    mensagens: mensagensSeed,
+    historico: historicoSeed,
   };
 }
 
@@ -70,6 +96,10 @@ type Ctx = State & {
   addEvento: (e: Omit<Evento, "id">) => void;
   removeEvento: (id: string) => void;
   marcarTodasLidas: () => void;
+  registrarChamada: (c: Omit<Chamada, "id">) => void;
+  enviarMensagem: (m: Omit<Mensagem, "id" | "quando">) => void;
+  registrarPagamento: (id: string) => void;
+  gerarMensalidade: (alunoId: string, referencia: string, valor: number, vencimento: string) => void;
   reset: () => void;
 };
 
@@ -185,6 +215,45 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         setState((s) => ({ ...s, agenda: [...s.agenda, { ...e, id: crypto.randomUUID() }] })),
       removeEvento: (id) =>
         setState((s) => ({ ...s, agenda: s.agenda.filter((e) => e.id !== id) })),
+      registrarChamada: (c) => {
+        const faltas = Object.values(c.presencas).filter((p) => !p).length;
+        setState((s) => {
+          const idx = s.chamadas.findIndex(
+            (x) => x.aulaId === c.aulaId && x.data === c.data,
+          );
+          const registro: Chamada = { ...c, id: idx >= 0 ? s.chamadas[idx]!.id : crypto.randomUUID() };
+          const chamadas =
+            idx >= 0
+              ? s.chamadas.map((x, i) => (i === idx ? registro : x))
+              : [registro, ...s.chamadas];
+          return { ...s, chamadas };
+        });
+        notificar(
+          `Chamada de ${c.disciplina} (${c.turma}) registrada — ${faltas} falta(s) em ${c.data}.`,
+        );
+      },
+      enviarMensagem: (m) =>
+        setState((s) => ({
+          ...s,
+          mensagens: [{ ...m, id: crypto.randomUUID(), quando: "agora" }, ...s.mensagens],
+        })),
+      registrarPagamento: (id) => {
+        setState((s) => ({
+          ...s,
+          mensalidades: s.mensalidades.map((m) =>
+            m.id === id ? { ...m, status: "Paga" } : m,
+          ),
+        }));
+        notificar("Pagamento de mensalidade registrado.");
+      },
+      gerarMensalidade: (alunoId, referencia, valor, vencimento) =>
+        setState((s) => ({
+          ...s,
+          mensalidades: [
+            { id: crypto.randomUUID(), alunoId, referencia, valor, vencimento, status: "Pendente" },
+            ...s.mensalidades,
+          ],
+        })),
       marcarTodasLidas: () =>
         setState((s) => ({
           ...s,
