@@ -8,13 +8,13 @@ import {
   type ReactNode,
 } from "react";
 
-export type Perfil = "secretaria" | "professor" | "responsavel";
+export type Perfil = "secretaria" | "professor" | "responsavel" | "aluno";
 
 export type Usuario = {
   nome: string;
   email: string;
   perfil: Perfil;
-  /** Para responsáveis: nome do aluno vinculado. Para professores: disciplina. */
+  /** Responsável: nome do aluno. Professor: disciplina. Aluno: turma. */
   vinculo?: string;
 };
 
@@ -39,12 +39,20 @@ export const contasDemo: Array<Usuario & { senha: string }> = [
     perfil: "responsavel",
     vinculo: "Ana Beatriz Ferreira",
   },
+  {
+    nome: "Ana Beatriz Ferreira",
+    email: "aluno@escola.edu.br",
+    senha: "123456",
+    perfil: "aluno",
+    vinculo: "9º A",
+  },
 ];
 
 export const rotulosPerfil: Record<Perfil, string> = {
   secretaria: "Secretaria acadêmica",
   professor: "Professor(a)",
   responsavel: "Responsável",
+  aluno: "Aluno(a)",
 };
 
 const STORAGE_KEY = "colegio-aurora-auth-v1";
