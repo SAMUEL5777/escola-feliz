@@ -46,6 +46,7 @@ import {
 import { AppShell } from "@/components/AppShell";
 import { frequenciaMensal, disciplinas } from "@/lib/school-data";
 import { useSchool } from "@/lib/school-store";
+import { useAuth } from "@/lib/auth-store";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -69,6 +70,8 @@ export const Route = createFileRoute("/")({
 function Painel() {
   const { alunos, professores, turmas, agenda, notas, addEvento, removeEvento } = useSchool();
   const navigate = useNavigate();
+  const { usuario } = useAuth();
+  const gestao = usuario?.perfil === "secretaria" || usuario?.perfil === "professor";
   const [aberto, setAberto] = useState(false);
   const [evento, setEvento] = useState({ data: "", titulo: "", tipo: "Evento" });
 
@@ -107,21 +110,37 @@ function Painel() {
       title="Painel geral"
       subtitle="Visão consolidada do 2º bimestre de 2026"
       actions={
-        <>
-          <Button size="sm" onClick={() => navigate({ to: "/alunos" })}>
-            <UserPlus className="size-4" /> Matricular aluno
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => navigate({ to: "/notas" })}>
-            <ClipboardList className="size-4" /> Lançar notas
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => setAberto(true)}>
-            <CalendarPlus className="size-4" /> Novo compromisso
-          </Button>
-        </>
+        gestao ? (
+          <>
+            {usuario?.perfil === "secretaria" && (
+              <Button size="sm" onClick={() => navigate({ to: "/alunos" })}>
+                <UserPlus className="size-4" /> Matricular aluno
+              </Button>
+            )}
+            <Button size="sm" variant="outline" onClick={() => navigate({ to: "/notas" })}>
+              <ClipboardList className="size-4" /> Lançar notas
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setAberto(true)}>
+              <CalendarPlus className="size-4" /> Novo compromisso
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button size="sm" onClick={() => navigate({ to: "/boletim" })}>
+              Meu boletim
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => navigate({ to: "/financeiro" })}>
+              Mensalidades
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => navigate({ to: "/mensagens" })}>
+              Mensagens
+            </Button>
+          </>
+        )
       }
     >
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {stats.map(({ label, value, hint, icon: Icon, to }) => (
+        {(gestao ? stats : []).map(({ label, value, hint, icon: Icon, to }) => (
           <button key={label} className="text-left" onClick={() => navigate({ to })}>
             <Card className="shadow-soft transition-shadow hover:shadow-md">
               <CardContent className="flex items-start justify-between gap-4 pt-6">
