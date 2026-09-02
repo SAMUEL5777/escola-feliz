@@ -47,6 +47,7 @@ import { AppShell } from "@/components/AppShell";
 import { frequenciaMensal, disciplinas } from "@/lib/school-data";
 import { useSchool } from "@/lib/school-store";
 import { useAuth } from "@/lib/auth-store";
+import { alunosVisiveis } from "@/lib/escopo";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -76,6 +77,15 @@ function Painel() {
   const [evento, setEvento] = useState({ data: "", titulo: "", tipo: "Evento" });
 
   const emRisco = alunos.filter((a) => a.situacao !== "Aprovado");
+  const meuAluno = alunosVisiveis(alunos, usuario)[0];
+  const statsPessoais = meuAluno
+    ? ([
+        { label: "Média atual", value: meuAluno.media.toFixed(1).replace(".", ","), hint: meuAluno.situacao, icon: TrendingUp, to: "/boletim" },
+        { label: "Frequência", value: `${meuAluno.frequencia}%`, hint: "no bimestre", icon: ClipboardList, to: "/boletim" },
+        { label: "Turma", value: meuAluno.turma, hint: "ano letivo 2026", icon: BookOpen, to: "/boletim" },
+        { label: "Mensalidades em aberto", value: String(0), hint: "ver financeiro", icon: Users, to: "/financeiro" },
+      ] as const)
+    : [];
   const mediaGeral =
     alunos.length > 0
       ? (alunos.reduce((s, a) => s + a.media, 0) / alunos.length).toFixed(1).replace(".", ",")
@@ -140,7 +150,7 @@ function Painel() {
       }
     >
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {(gestao ? stats : []).map(({ label, value, hint, icon: Icon, to }) => (
+        {(gestao ? stats : statsPessoais).map(({ label, value, hint, icon: Icon, to }) => (
           <button key={label} className="text-left" onClick={() => navigate({ to })}>
             <Card className="shadow-soft transition-shadow hover:shadow-md">
               <CardContent className="flex items-start justify-between gap-4 pt-6">
@@ -283,6 +293,7 @@ function Painel() {
           </CardContent>
         </Card>
 
+        {gestao && (
         <Card className="shadow-soft">
           <CardHeader className="flex-row items-start justify-between space-y-0">
             <div>
@@ -315,6 +326,7 @@ function Painel() {
             ))}
           </CardContent>
         </Card>
+        )}
       </div>
     </AppShell>
   );
