@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useSchool } from "@/lib/school-store";
+import { alunosVisiveis } from "@/lib/escopo";
 import { useAuth } from "@/lib/auth-store";
 
 export const Route = createFileRoute("/boletim")({
@@ -38,12 +39,7 @@ function BoletimPage() {
   const { alunos, notas, historico } = useSchool();
   const { usuario } = useAuth();
 
-  const visiveis = useMemo(() => {
-    if (usuario?.perfil === "responsavel" && usuario.vinculo) {
-      return alunos.filter((a) => a.nome === usuario.vinculo);
-    }
-    return alunos;
-  }, [alunos, usuario]);
+  const visiveis = useMemo(() => alunosVisiveis(alunos, usuario), [alunos, usuario]);
 
   const [alunoId, setAlunoId] = useState(visiveis[0]?.id ?? "");
   const aluno = visiveis.find((a) => a.id === alunoId) ?? visiveis[0];

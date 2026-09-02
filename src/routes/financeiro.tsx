@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useSchool } from "@/lib/school-store";
+import { alunosVisiveis } from "@/lib/escopo";
 import { useAuth } from "@/lib/auth-store";
 
 export const Route = createFileRoute("/financeiro")({
@@ -47,9 +48,9 @@ function FinanceiroPage() {
 
   const lista = useMemo(() => {
     let l = mensalidades;
-    if (usuario?.perfil === "responsavel" && usuario.vinculo) {
-      const meu = alunos.find((a) => a.nome === usuario.vinculo);
-      l = l.filter((m) => m.alunoId === meu?.id);
+    if (usuario && usuario.perfil !== "secretaria") {
+      const ids = new Set(alunosVisiveis(alunos, usuario).map((a) => a.id));
+      l = l.filter((m) => ids.has(m.alunoId));
     }
     if (status !== "todas") l = l.filter((m) => m.status === status);
     if (busca.trim()) {

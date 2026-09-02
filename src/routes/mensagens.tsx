@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useSchool } from "@/lib/school-store";
+import { alunosVisiveis } from "@/lib/escopo";
 import { useAuth, rotulosPerfil } from "@/lib/auth-store";
 
 export const Route = createFileRoute("/mensagens")({
@@ -39,12 +40,7 @@ function MensagensPage() {
   const { alunos, mensagens, enviarMensagem } = useSchool();
   const { usuario } = useAuth();
 
-  const visiveis = useMemo(() => {
-    if (usuario?.perfil === "responsavel" && usuario.vinculo) {
-      return alunos.filter((a) => a.nome === usuario.vinculo);
-    }
-    return alunos;
-  }, [alunos, usuario]);
+  const visiveis = useMemo(() => alunosVisiveis(alunos, usuario), [alunos, usuario]);
 
   const [alunoId, setAlunoId] = useState(visiveis[0]?.id ?? "");
   const [texto, setTexto] = useState("");

@@ -1,13 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +40,8 @@ import {
 import { AppShell } from "@/components/AppShell";
 import { frequenciaMensal, disciplinas } from "@/lib/school-data";
 import { useSchool } from "@/lib/school-store";
+import { useAuth } from "@/lib/auth-store";
+import { alunosVisiveis } from "@/lib/escopo";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -67,22 +63,84 @@ export const Route = createFileRoute("/")({
 });
 
 function Painel() {
-  const { alunos, professores, turmas, agenda, notas, addEvento, removeEvento } = useSchool();
+  const { alunos, professores, turmas, agenda, notas, mensalidades, addEvento, removeEvento } =
+    useSchool();
   const navigate = useNavigate();
+  const { usuario } = useAuth();
+  const gestao = usuario?.perfil === "secretaria" || usuario?.perfil === "professor";
   const [aberto, setAberto] = useState(false);
   const [evento, setEvento] = useState({ data: "", titulo: "", tipo: "Evento" });
 
   const emRisco = alunos.filter((a) => a.situacao !== "Aprovado");
+  const meuAluno = alunosVisiveis(alunos, usuario)[0];
+  const statsPessoais = meuAluno
+    ? ([
+        {
+          label: "Média atual",
+          value: meuAluno.media.toFixed(1).replace(".", ","),
+          hint: meuAluno.situacao,
+          icon: TrendingUp,
+          to: "/boletim",
+        },
+        {
+          label: "Frequência",
+          value: `${meuAluno.frequencia}%`,
+          hint: "no bimestre",
+          icon: ClipboardList,
+          to: "/boletim",
+        },
+        {
+          label: "Turma",
+          value: meuAluno.turma,
+          hint: "ano letivo 2026",
+          icon: BookOpen,
+          to: "/boletim",
+        },
+        {
+          label: "Mensalidades em aberto",
+          value: String(
+            mensalidades.filter((m) => m.alunoId === meuAluno.id && m.status !== "Paga").length,
+          ),
+          hint: "ver financeiro",
+          icon: Users,
+          to: "/financeiro",
+        },
+      ] as const)
+    : [];
   const mediaGeral =
     alunos.length > 0
       ? (alunos.reduce((s, a) => s + a.media, 0) / alunos.length).toFixed(1).replace(".", ",")
       : "0,0";
 
   const stats = [
-    { label: "Alunos matriculados", value: String(alunos.length), hint: "clique para ver a lista", icon: GraduationCap, to: "/alunos" },
-    { label: "Professores ativos", value: String(professores.length), hint: `${disciplinas.length} disciplinas`, icon: Users, to: "/professores" },
-    { label: "Turmas abertas", value: String(turmas.length), hint: "2 turnos", icon: BookOpen, to: "/turmas" },
-    { label: "Média geral", value: mediaGeral, hint: "recalculada em tempo real", icon: TrendingUp, to: "/notas" },
+    {
+      label: "Alunos matriculados",
+      value: String(alunos.length),
+      hint: "clique para ver a lista",
+      icon: GraduationCap,
+      to: "/alunos",
+    },
+    {
+      label: "Professores ativos",
+      value: String(professores.length),
+      hint: `${disciplinas.length} disciplinas`,
+      icon: Users,
+      to: "/professores",
+    },
+    {
+      label: "Turmas abertas",
+      value: String(turmas.length),
+      hint: "2 turnos",
+      icon: BookOpen,
+      to: "/turmas",
+    },
+    {
+      label: "Média geral",
+      value: mediaGeral,
+      hint: "recalculada em tempo real",
+      icon: TrendingUp,
+      to: "/notas",
+    },
   ] as const;
 
   const desempenho = disciplinas.map((d, i) => {
@@ -107,21 +165,37 @@ function Painel() {
       title="Painel geral"
       subtitle="Visão consolidada do 2º bimestre de 2026"
       actions={
-        <>
-          <Button size="sm" onClick={() => navigate({ to: "/alunos" })}>
-            <UserPlus className="size-4" /> Matricular aluno
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => navigate({ to: "/notas" })}>
-            <ClipboardList className="size-4" /> Lançar notas
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => setAberto(true)}>
-            <CalendarPlus className="size-4" /> Novo compromisso
-          </Button>
-        </>
+        gestao ? (
+          <>
+            {usuario?.perfil === "secretaria" && (
+              <Button size="sm" onClick={() => navigate({ to: "/alunos" })}>
+                <UserPlus className="size-4" /> Matricular aluno
+              </Button>
+            )}
+            <Button size="sm" variant="outline" onClick={() => navigate({ to: "/notas" })}>
+              <ClipboardList className="size-4" /> Lançar notas
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setAberto(true)}>
+              <CalendarPlus className="size-4" /> Novo compromisso
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button size="sm" onClick={() => navigate({ to: "/boletim" })}>
+              Meu boletim
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => navigate({ to: "/financeiro" })}>
+              Mensalidades
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => navigate({ to: "/mensagens" })}>
+              Mensagens
+            </Button>
+          </>
+        )
       }
     >
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {stats.map(({ label, value, hint, icon: Icon, to }) => (
+        {(gestao ? stats : statsPessoais).map(({ label, value, hint, icon: Icon, to }) => (
           <button key={label} className="text-left" onClick={() => navigate({ to })}>
             <Card className="shadow-soft transition-shadow hover:shadow-md">
               <CardContent className="flex items-start justify-between gap-4 pt-6">
@@ -170,52 +244,54 @@ function Painel() {
               <CardTitle>Agenda pedagógica</CardTitle>
               <CardDescription>Próximos compromissos</CardDescription>
             </div>
-            <Dialog open={aberto} onOpenChange={setAberto}>
-              <DialogTrigger asChild>
-                <Button size="sm" variant="outline">
-                  <CalendarPlus className="size-4" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Novo compromisso</DialogTitle>
-                  <DialogDescription>Adicione um item à agenda pedagógica.</DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="edata">Data</Label>
-                    <Input
-                      id="edata"
-                      placeholder="25 Ago"
-                      value={evento.data}
-                      onChange={(e) => setEvento({ ...evento, data: e.target.value })}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="etit">Título</Label>
-                    <Input
-                      id="etit"
-                      value={evento.titulo}
-                      onChange={(e) => setEvento({ ...evento, titulo: e.target.value })}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="etipo">Tipo</Label>
-                    <Input
-                      id="etipo"
-                      value={evento.tipo}
-                      onChange={(e) => setEvento({ ...evento, tipo: e.target.value })}
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setAberto(false)}>
-                    Cancelar
+            {gestao && (
+              <Dialog open={aberto} onOpenChange={setAberto}>
+                <DialogTrigger asChild>
+                  <Button size="sm" variant="outline">
+                    <CalendarPlus className="size-4" />
                   </Button>
-                  <Button onClick={salvarEvento}>Adicionar</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Novo compromisso</DialogTitle>
+                    <DialogDescription>Adicione um item à agenda pedagógica.</DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="edata">Data</Label>
+                      <Input
+                        id="edata"
+                        placeholder="25 Ago"
+                        value={evento.data}
+                        onChange={(e) => setEvento({ ...evento, data: e.target.value })}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="etit">Título</Label>
+                      <Input
+                        id="etit"
+                        value={evento.titulo}
+                        onChange={(e) => setEvento({ ...evento, titulo: e.target.value })}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="etipo">Tipo</Label>
+                      <Input
+                        id="etipo"
+                        value={evento.tipo}
+                        onChange={(e) => setEvento({ ...evento, tipo: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setAberto(false)}>
+                      Cancelar
+                    </Button>
+                    <Button onClick={salvarEvento}>Adicionar</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
           </CardHeader>
           <CardContent className="space-y-4">
             {agenda.map((item) => (
@@ -227,15 +303,17 @@ function Painel() {
                   <p className="truncate text-sm font-medium">{item.titulo}</p>
                   <p className="text-xs text-muted-foreground">{item.tipo}</p>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={`Remover ${item.titulo}`}
-                  className="text-muted-foreground hover:text-destructive"
-                  onClick={() => removeEvento(item.id)}
-                >
-                  <Trash2 className="size-4" />
-                </Button>
+                {gestao && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`Remover ${item.titulo}`}
+                    className="text-muted-foreground hover:text-destructive"
+                    onClick={() => removeEvento(item.id)}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                )}
               </div>
             ))}
             {agenda.length === 0 && (
@@ -264,38 +342,40 @@ function Painel() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-soft">
-          <CardHeader className="flex-row items-start justify-between space-y-0">
-            <div>
-              <CardTitle>Alunos em atenção</CardTitle>
-              <CardDescription>Baixa frequência ou média abaixo de 7,0</CardDescription>
-            </div>
-            <Button size="sm" variant="outline" onClick={() => navigate({ to: "/notas" })}>
-              Ver notas
-            </Button>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            {emRisco.length === 0 && (
-              <p className="text-sm text-muted-foreground">Nenhum aluno em situação de risco.</p>
-            )}
-            {emRisco.map((a) => (
-              <div key={a.id}>
-                <div className="flex items-center justify-between gap-2">
-                  <p className="truncate text-sm font-medium">{a.nome}</p>
-                  <Badge variant={a.situacao === "Reprovado" ? "destructive" : "secondary"}>
-                    {a.situacao}
-                  </Badge>
-                </div>
-                <div className="mt-2 flex items-center gap-3">
-                  <Progress value={a.frequencia} className="h-2" />
-                  <span className="w-24 shrink-0 text-right text-xs text-muted-foreground">
-                    {a.frequencia}% · média {a.media.toFixed(1)}
-                  </span>
-                </div>
+        {gestao && (
+          <Card className="shadow-soft">
+            <CardHeader className="flex-row items-start justify-between space-y-0">
+              <div>
+                <CardTitle>Alunos em atenção</CardTitle>
+                <CardDescription>Baixa frequência ou média abaixo de 7,0</CardDescription>
               </div>
-            ))}
-          </CardContent>
-        </Card>
+              <Button size="sm" variant="outline" onClick={() => navigate({ to: "/notas" })}>
+                Ver notas
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              {emRisco.length === 0 && (
+                <p className="text-sm text-muted-foreground">Nenhum aluno em situação de risco.</p>
+              )}
+              {emRisco.map((a) => (
+                <div key={a.id}>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="truncate text-sm font-medium">{a.nome}</p>
+                    <Badge variant={a.situacao === "Reprovado" ? "destructive" : "secondary"}>
+                      {a.situacao}
+                    </Badge>
+                  </div>
+                  <div className="mt-2 flex items-center gap-3">
+                    <Progress value={a.frequencia} className="h-2" />
+                    <span className="w-24 shrink-0 text-right text-xs text-muted-foreground">
+                      {a.frequencia}% · média {a.media.toFixed(1)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
       </div>
     </AppShell>
   );

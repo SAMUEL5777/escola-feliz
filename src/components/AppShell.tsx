@@ -30,15 +30,15 @@ import { useSchool } from "@/lib/school-store";
 import { useAuth, rotulosPerfil, type Perfil } from "@/lib/auth-store";
 
 const nav = [
-  { to: "/", label: "Painel", icon: LayoutDashboard, perfis: ["secretaria", "professor", "responsavel"] },
+  { to: "/", label: "Painel", icon: LayoutDashboard, perfis: ["secretaria", "professor", "responsavel", "aluno"] },
   { to: "/alunos", label: "Alunos", icon: GraduationCap, perfis: ["secretaria", "professor"] },
   { to: "/professores", label: "Professores", icon: Users, perfis: ["secretaria"] },
   { to: "/turmas", label: "Turmas", icon: BookOpen, perfis: ["secretaria", "professor"] },
   { to: "/notas", label: "Notas & Frequência", icon: ClipboardList, perfis: ["secretaria", "professor"] },
   { to: "/chamada", label: "Chamada diária", icon: CalendarCheck, perfis: ["secretaria", "professor"] },
-  { to: "/boletim", label: "Boletim & Histórico", icon: FileText, perfis: ["secretaria", "professor", "responsavel"] },
-  { to: "/financeiro", label: "Financeiro", icon: Wallet, perfis: ["secretaria", "responsavel"] },
-  { to: "/mensagens", label: "Mensagens", icon: MessageSquare, perfis: ["secretaria", "professor", "responsavel"] },
+  { to: "/boletim", label: "Boletim & Histórico", icon: FileText, perfis: ["secretaria", "professor", "responsavel", "aluno"] },
+  { to: "/financeiro", label: "Financeiro", icon: Wallet, perfis: ["secretaria", "responsavel", "aluno"] },
+  { to: "/mensagens", label: "Mensagens", icon: MessageSquare, perfis: ["secretaria", "professor", "responsavel", "aluno"] },
 ] as const satisfies ReadonlyArray<{
   to: string;
   label: string;
@@ -149,7 +149,7 @@ export function AppShell({
                 </span>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => toast.info("Perfil disponível em breve.")}>
+              <DropdownMenuItem onSelect={() => navigate({ to: "/perfil" })}>
                 <UserCog className="size-4" /> Meu perfil
               </DropdownMenuItem>
               {usuario.perfil === "secretaria" && (

@@ -17,6 +17,7 @@ import { Route as FinanceiroRouteImport } from './routes/financeiro'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MensagensRouteImport } from './routes/mensagens'
 import { Route as NotasRouteImport } from './routes/notas'
+import { Route as PerfilRouteImport } from './routes/perfil'
 import { Route as ProfessoresRouteImport } from './routes/professores'
 import { Route as TurmasRouteImport } from './routes/turmas'
 
@@ -60,6 +61,11 @@ const NotasRoute = NotasRouteImport.update({
   path: '/notas',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PerfilRoute = PerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfessoresRoute = ProfessoresRouteImport.update({
   id: '/professores',
   path: '/professores',
@@ -80,6 +86,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/mensagens': typeof MensagensRoute
   '/notas': typeof NotasRoute
+  '/perfil': typeof PerfilRoute
   '/professores': typeof ProfessoresRoute
   '/turmas': typeof TurmasRoute
 }
@@ -92,6 +99,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/mensagens': typeof MensagensRoute
   '/notas': typeof NotasRoute
+  '/perfil': typeof PerfilRoute
   '/professores': typeof ProfessoresRoute
   '/turmas': typeof TurmasRoute
 }
@@ -105,6 +113,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/mensagens': typeof MensagensRoute
   '/notas': typeof NotasRoute
+  '/perfil': typeof PerfilRoute
   '/professores': typeof ProfessoresRoute
   '/turmas': typeof TurmasRoute
 }
@@ -119,6 +128,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/mensagens'
     | '/notas'
+    | '/perfil'
     | '/professores'
     | '/turmas'
   fileRoutesByTo: FileRoutesByTo
@@ -131,6 +141,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/mensagens'
     | '/notas'
+    | '/perfil'
     | '/professores'
     | '/turmas'
   id:
@@ -143,6 +154,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/mensagens'
     | '/notas'
+    | '/perfil'
     | '/professores'
     | '/turmas'
   fileRoutesById: FileRoutesById
@@ -156,6 +168,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MensagensRoute: typeof MensagensRoute
   NotasRoute: typeof NotasRoute
+  PerfilRoute: typeof PerfilRoute
   ProfessoresRoute: typeof ProfessoresRoute
   TurmasRoute: typeof TurmasRoute
 }
@@ -218,6 +231,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NotasRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/perfil': {
+      id: '/perfil'
+      path: '/perfil'
+      fullPath: '/perfil'
+      preLoaderRoute: typeof PerfilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/professores': {
       id: '/professores'
       path: '/professores'
@@ -244,6 +264,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MensagensRoute: MensagensRoute,
   NotasRoute: NotasRoute,
+  PerfilRoute: PerfilRoute,
   ProfessoresRoute: ProfessoresRoute,
   TurmasRoute: TurmasRoute,
 }
