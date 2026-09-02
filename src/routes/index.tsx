@@ -1,13 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,7 +63,8 @@ export const Route = createFileRoute("/")({
 });
 
 function Painel() {
-  const { alunos, professores, turmas, agenda, notas, addEvento, removeEvento } = useSchool();
+  const { alunos, professores, turmas, agenda, notas, mensalidades, addEvento, removeEvento } =
+    useSchool();
   const navigate = useNavigate();
   const { usuario } = useAuth();
   const gestao = usuario?.perfil === "secretaria" || usuario?.perfil === "professor";
@@ -80,10 +75,36 @@ function Painel() {
   const meuAluno = alunosVisiveis(alunos, usuario)[0];
   const statsPessoais = meuAluno
     ? ([
-        { label: "Média atual", value: meuAluno.media.toFixed(1).replace(".", ","), hint: meuAluno.situacao, icon: TrendingUp, to: "/boletim" },
-        { label: "Frequência", value: `${meuAluno.frequencia}%`, hint: "no bimestre", icon: ClipboardList, to: "/boletim" },
-        { label: "Turma", value: meuAluno.turma, hint: "ano letivo 2026", icon: BookOpen, to: "/boletim" },
-        { label: "Mensalidades em aberto", value: String(0), hint: "ver financeiro", icon: Users, to: "/financeiro" },
+        {
+          label: "Média atual",
+          value: meuAluno.media.toFixed(1).replace(".", ","),
+          hint: meuAluno.situacao,
+          icon: TrendingUp,
+          to: "/boletim",
+        },
+        {
+          label: "Frequência",
+          value: `${meuAluno.frequencia}%`,
+          hint: "no bimestre",
+          icon: ClipboardList,
+          to: "/boletim",
+        },
+        {
+          label: "Turma",
+          value: meuAluno.turma,
+          hint: "ano letivo 2026",
+          icon: BookOpen,
+          to: "/boletim",
+        },
+        {
+          label: "Mensalidades em aberto",
+          value: String(
+            mensalidades.filter((m) => m.alunoId === meuAluno.id && m.status !== "Paga").length,
+          ),
+          hint: "ver financeiro",
+          icon: Users,
+          to: "/financeiro",
+        },
       ] as const)
     : [];
   const mediaGeral =
@@ -92,10 +113,34 @@ function Painel() {
       : "0,0";
 
   const stats = [
-    { label: "Alunos matriculados", value: String(alunos.length), hint: "clique para ver a lista", icon: GraduationCap, to: "/alunos" },
-    { label: "Professores ativos", value: String(professores.length), hint: `${disciplinas.length} disciplinas`, icon: Users, to: "/professores" },
-    { label: "Turmas abertas", value: String(turmas.length), hint: "2 turnos", icon: BookOpen, to: "/turmas" },
-    { label: "Média geral", value: mediaGeral, hint: "recalculada em tempo real", icon: TrendingUp, to: "/notas" },
+    {
+      label: "Alunos matriculados",
+      value: String(alunos.length),
+      hint: "clique para ver a lista",
+      icon: GraduationCap,
+      to: "/alunos",
+    },
+    {
+      label: "Professores ativos",
+      value: String(professores.length),
+      hint: `${disciplinas.length} disciplinas`,
+      icon: Users,
+      to: "/professores",
+    },
+    {
+      label: "Turmas abertas",
+      value: String(turmas.length),
+      hint: "2 turnos",
+      icon: BookOpen,
+      to: "/turmas",
+    },
+    {
+      label: "Média geral",
+      value: mediaGeral,
+      hint: "recalculada em tempo real",
+      icon: TrendingUp,
+      to: "/notas",
+    },
   ] as const;
 
   const desempenho = disciplinas.map((d, i) => {
@@ -294,38 +339,38 @@ function Painel() {
         </Card>
 
         {gestao && (
-        <Card className="shadow-soft">
-          <CardHeader className="flex-row items-start justify-between space-y-0">
-            <div>
-              <CardTitle>Alunos em atenção</CardTitle>
-              <CardDescription>Baixa frequência ou média abaixo de 7,0</CardDescription>
-            </div>
-            <Button size="sm" variant="outline" onClick={() => navigate({ to: "/notas" })}>
-              Ver notas
-            </Button>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            {emRisco.length === 0 && (
-              <p className="text-sm text-muted-foreground">Nenhum aluno em situação de risco.</p>
-            )}
-            {emRisco.map((a) => (
-              <div key={a.id}>
-                <div className="flex items-center justify-between gap-2">
-                  <p className="truncate text-sm font-medium">{a.nome}</p>
-                  <Badge variant={a.situacao === "Reprovado" ? "destructive" : "secondary"}>
-                    {a.situacao}
-                  </Badge>
-                </div>
-                <div className="mt-2 flex items-center gap-3">
-                  <Progress value={a.frequencia} className="h-2" />
-                  <span className="w-24 shrink-0 text-right text-xs text-muted-foreground">
-                    {a.frequencia}% · média {a.media.toFixed(1)}
-                  </span>
-                </div>
+          <Card className="shadow-soft">
+            <CardHeader className="flex-row items-start justify-between space-y-0">
+              <div>
+                <CardTitle>Alunos em atenção</CardTitle>
+                <CardDescription>Baixa frequência ou média abaixo de 7,0</CardDescription>
               </div>
-            ))}
-          </CardContent>
-        </Card>
+              <Button size="sm" variant="outline" onClick={() => navigate({ to: "/notas" })}>
+                Ver notas
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              {emRisco.length === 0 && (
+                <p className="text-sm text-muted-foreground">Nenhum aluno em situação de risco.</p>
+              )}
+              {emRisco.map((a) => (
+                <div key={a.id}>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="truncate text-sm font-medium">{a.nome}</p>
+                    <Badge variant={a.situacao === "Reprovado" ? "destructive" : "secondary"}>
+                      {a.situacao}
+                    </Badge>
+                  </div>
+                  <div className="mt-2 flex items-center gap-3">
+                    <Progress value={a.frequencia} className="h-2" />
+                    <span className="w-24 shrink-0 text-right text-xs text-muted-foreground">
+                      {a.frequencia}% · média {a.media.toFixed(1)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
         )}
       </div>
     </AppShell>
