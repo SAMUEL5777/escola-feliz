@@ -244,52 +244,54 @@ function Painel() {
               <CardTitle>Agenda pedagógica</CardTitle>
               <CardDescription>Próximos compromissos</CardDescription>
             </div>
-            <Dialog open={aberto} onOpenChange={setAberto}>
-              <DialogTrigger asChild>
-                <Button size="sm" variant="outline">
-                  <CalendarPlus className="size-4" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Novo compromisso</DialogTitle>
-                  <DialogDescription>Adicione um item à agenda pedagógica.</DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="edata">Data</Label>
-                    <Input
-                      id="edata"
-                      placeholder="25 Ago"
-                      value={evento.data}
-                      onChange={(e) => setEvento({ ...evento, data: e.target.value })}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="etit">Título</Label>
-                    <Input
-                      id="etit"
-                      value={evento.titulo}
-                      onChange={(e) => setEvento({ ...evento, titulo: e.target.value })}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="etipo">Tipo</Label>
-                    <Input
-                      id="etipo"
-                      value={evento.tipo}
-                      onChange={(e) => setEvento({ ...evento, tipo: e.target.value })}
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setAberto(false)}>
-                    Cancelar
+            {gestao && (
+              <Dialog open={aberto} onOpenChange={setAberto}>
+                <DialogTrigger asChild>
+                  <Button size="sm" variant="outline">
+                    <CalendarPlus className="size-4" />
                   </Button>
-                  <Button onClick={salvarEvento}>Adicionar</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Novo compromisso</DialogTitle>
+                    <DialogDescription>Adicione um item à agenda pedagógica.</DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="edata">Data</Label>
+                      <Input
+                        id="edata"
+                        placeholder="25 Ago"
+                        value={evento.data}
+                        onChange={(e) => setEvento({ ...evento, data: e.target.value })}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="etit">Título</Label>
+                      <Input
+                        id="etit"
+                        value={evento.titulo}
+                        onChange={(e) => setEvento({ ...evento, titulo: e.target.value })}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="etipo">Tipo</Label>
+                      <Input
+                        id="etipo"
+                        value={evento.tipo}
+                        onChange={(e) => setEvento({ ...evento, tipo: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setAberto(false)}>
+                      Cancelar
+                    </Button>
+                    <Button onClick={salvarEvento}>Adicionar</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
           </CardHeader>
           <CardContent className="space-y-4">
             {agenda.map((item) => (
@@ -301,15 +303,17 @@ function Painel() {
                   <p className="truncate text-sm font-medium">{item.titulo}</p>
                   <p className="text-xs text-muted-foreground">{item.tipo}</p>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={`Remover ${item.titulo}`}
-                  className="text-muted-foreground hover:text-destructive"
-                  onClick={() => removeEvento(item.id)}
-                >
-                  <Trash2 className="size-4" />
-                </Button>
+                {gestao && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`Remover ${item.titulo}`}
+                    className="text-muted-foreground hover:text-destructive"
+                    onClick={() => removeEvento(item.id)}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                )}
               </div>
             ))}
             {agenda.length === 0 && (
