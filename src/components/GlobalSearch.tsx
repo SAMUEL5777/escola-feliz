@@ -10,11 +10,41 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { useSchool } from "@/lib/school-store";
+import { useAuth, type Perfil } from "@/lib/auth-store";
+import { alunosVisiveis } from "@/lib/escopo";
 
 export function GlobalSearch() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
-  const { alunos, professores, turmas } = useSchool();
+  const { alunos: todosAlunos, professores, turmas } = useSchool();
+  const { usuario } = useAuth();
+  const alunos = alunosVisiveis(todosAlunos, usuario);
+  const perfil: Perfil = usuario?.perfil ?? "secretaria";
+  const paginas = [
+    { to: "/", label: "Painel", perfis: ["secretaria", "professor", "responsavel", "aluno"] },
+    { to: "/alunos", label: "Alunos", perfis: ["secretaria", "professor"] },
+    { to: "/professores", label: "Professores", perfis: ["secretaria"] },
+    { to: "/turmas", label: "Turmas", perfis: ["secretaria", "professor"] },
+    { to: "/notas", label: "Notas & Frequência", perfis: ["secretaria", "professor"] },
+    { to: "/chamada", label: "Chamada diária", perfis: ["secretaria", "professor"] },
+    {
+      to: "/boletim",
+      label: "Boletim & Histórico",
+      perfis: ["secretaria", "professor", "responsavel", "aluno"],
+    },
+    { to: "/financeiro", label: "Financeiro", perfis: ["secretaria", "responsavel", "aluno"] },
+    {
+      to: "/mensagens",
+      label: "Mensagens",
+      perfis: ["secretaria", "professor", "responsavel", "aluno"],
+    },
+    {
+      to: "/perfil",
+      label: "Meu perfil",
+      perfis: ["secretaria", "professor", "responsavel", "aluno"],
+    },
+  ].filter((p) => (p.perfis as string[]).includes(perfil));
+  const podeVerEquipe = perfil === "secretaria" || perfil === "professor";
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -50,40 +80,48 @@ export function GlobalSearch() {
         <CommandList>
           <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
           <CommandGroup heading="Páginas">
-            <CommandItem onSelect={() => go("/")}>Painel</CommandItem>
-            <CommandItem onSelect={() => go("/alunos")}>Alunos</CommandItem>
-            <CommandItem onSelect={() => go("/professores")}>Professores</CommandItem>
-            <CommandItem onSelect={() => go("/turmas")}>Turmas</CommandItem>
-            <CommandItem onSelect={() => go("/notas")}>Notas & Frequência</CommandItem>
+            {paginas.map((p) => (
+              <CommandItem key={p.to} value={p.label} onSelect={() => go(p.to)}>
+                {p.label}
+              </CommandItem>
+            ))}
           </CommandGroup>
           <CommandGroup heading="Alunos">
             {alunos.map((a) => (
-              <CommandItem key={a.id} value={`${a.nome} ${a.turma}`} onSelect={() => go("/alunos")}>
+              <CommandItem
+                key={a.id}
+                value={`${a.nome} ${a.turma}`}
+                onSelect={() => go(podeVerEquipe ? "/alunos" : "/boletim")}
+              >
                 {a.nome}
                 <span className="ml-auto text-xs text-muted-foreground">{a.turma}</span>
               </CommandItem>
             ))}
           </CommandGroup>
-          <CommandGroup heading="Professores">
-            {professores.map((p) => (
-              <CommandItem
-                key={p.id}
-                value={`${p.nome} ${p.disciplina}`}
-                onSelect={() => go("/professores")}
-              >
-                {p.nome}
-                <span className="ml-auto text-xs text-muted-foreground">{p.disciplina}</span>
-              </CommandItem>
-            ))}
-          </CommandGroup>
-          <CommandGroup heading="Turmas">
-            {turmas.map((t) => (
-              <CommandItem key={t.id} value={`turma ${t.nome}`} onSelect={() => go("/turmas")}>
-                {t.nome}
-                <span className="ml-auto text-xs text-muted-foreground">{t.turno}</span>
-              </CommandItem>
-            ))}
-          </CommandGroup>
+          {podeVerEquipe && (
+            <CommandGroup heading="Professores">
+              {professores.map((p) => (
+                <CommandItem
+                  key={p.id}
+                  value={`${p.nome} ${p.disciplina}`}
+                  onSelect={() => go("/professores")}
+                >
+                  {p.nome}
+                  <span className="ml-auto text-xs text-muted-foreground">{p.disciplina}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+          {podeVerEquipe && (
+            <CommandGroup heading="Turmas">
+              {turmas.map((t) => (
+                <CommandItem key={t.id} value={`turma ${t.nome}`} onSelect={() => go("/turmas")}>
+                  {t.nome}
+                  <span className="ml-auto text-xs text-muted-foreground">{t.turno}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
         </CommandList>
       </CommandDialog>
     </>
