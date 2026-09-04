@@ -96,17 +96,9 @@ function Painel() {
           icon: BookOpen,
           to: "/boletim",
         },
-        {
-          label: "Mensalidades em aberto",
-          value: String(
-            mensalidades.filter((m) => m.alunoId === meuAluno.id && m.status !== "Paga").length,
-          ),
-          hint: "ver financeiro",
-          icon: Users,
-          to: "/financeiro",
-        },
       ] as const)
     : [];
+
   const mediaGeral =
     alunos.length > 0
       ? (alunos.reduce((s, a) => s + a.media, 0) / alunos.length).toFixed(1).replace(".", ",")
