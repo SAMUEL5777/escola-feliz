@@ -65,6 +65,19 @@ function FinanceiroPage() {
   const total = lista.reduce((s, m) => s + m.valor, 0);
   const emAberto = lista.filter((m) => m.status !== "Paga").reduce((s, m) => s + m.valor, 0);
 
+  if (usuario?.perfil === "aluno") {
+    return (
+      <AppShell title="Financeiro" subtitle="Mensalidades, cobranças e pagamentos">
+        <Card>
+          <CardContent className="pt-6 text-sm text-muted-foreground">
+            O financeiro fica disponível apenas para a secretaria e para o responsável.
+          </CardContent>
+        </Card>
+      </AppShell>
+    );
+  }
+
+
   return (
     <AppShell
       title="Financeiro"

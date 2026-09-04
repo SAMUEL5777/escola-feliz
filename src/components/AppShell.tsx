@@ -37,7 +37,7 @@ const nav = [
   { to: "/notas", label: "Notas & Frequência", icon: ClipboardList, perfis: ["secretaria", "professor"] },
   { to: "/chamada", label: "Chamada diária", icon: CalendarCheck, perfis: ["secretaria", "professor"] },
   { to: "/boletim", label: "Boletim & Histórico", icon: FileText, perfis: ["secretaria", "professor", "responsavel", "aluno"] },
-  { to: "/financeiro", label: "Financeiro", icon: Wallet, perfis: ["secretaria", "responsavel", "aluno"] },
+  { to: "/financeiro", label: "Financeiro", icon: Wallet, perfis: ["secretaria", "responsavel"] },
   { to: "/mensagens", label: "Mensagens", icon: MessageSquare, perfis: ["secretaria", "professor", "responsavel", "aluno"] },
 ] as const satisfies ReadonlyArray<{
   to: string;

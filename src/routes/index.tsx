@@ -63,7 +63,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Painel() {
-  const { alunos, professores, turmas, agenda, notas, mensalidades, addEvento, removeEvento } =
+  const { alunos, professores, turmas, agenda, notas, addEvento, removeEvento } =
     useSchool();
   const navigate = useNavigate();
   const { usuario } = useAuth();
@@ -96,17 +96,9 @@ function Painel() {
           icon: BookOpen,
           to: "/boletim",
         },
-        {
-          label: "Mensalidades em aberto",
-          value: String(
-            mensalidades.filter((m) => m.alunoId === meuAluno.id && m.status !== "Paga").length,
-          ),
-          hint: "ver financeiro",
-          icon: Users,
-          to: "/financeiro",
-        },
       ] as const)
     : [];
+
   const mediaGeral =
     alunos.length > 0
       ? (alunos.reduce((s, a) => s + a.media, 0) / alunos.length).toFixed(1).replace(".", ",")
@@ -184,9 +176,12 @@ function Painel() {
             <Button size="sm" onClick={() => navigate({ to: "/boletim" })}>
               Meu boletim
             </Button>
-            <Button size="sm" variant="outline" onClick={() => navigate({ to: "/financeiro" })}>
-              Mensalidades
-            </Button>
+            {usuario?.perfil !== "aluno" && (
+              <Button size="sm" variant="outline" onClick={() => navigate({ to: "/financeiro" })}>
+                Mensalidades
+              </Button>
+            )}
+
             <Button size="sm" variant="outline" onClick={() => navigate({ to: "/mensagens" })}>
               Mensagens
             </Button>
