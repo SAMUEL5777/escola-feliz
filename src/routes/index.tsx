@@ -176,9 +176,12 @@ function Painel() {
             <Button size="sm" onClick={() => navigate({ to: "/boletim" })}>
               Meu boletim
             </Button>
-            <Button size="sm" variant="outline" onClick={() => navigate({ to: "/financeiro" })}>
-              Mensalidades
-            </Button>
+            {usuario?.perfil !== "aluno" && (
+              <Button size="sm" variant="outline" onClick={() => navigate({ to: "/financeiro" })}>
+                Mensalidades
+              </Button>
+            )}
+
             <Button size="sm" variant="outline" onClick={() => navigate({ to: "/mensagens" })}>
               Mensagens
             </Button>
