@@ -32,7 +32,7 @@ export function GlobalSearch() {
       label: "Boletim & Histórico",
       perfis: ["secretaria", "professor", "responsavel", "aluno"],
     },
-    { to: "/financeiro", label: "Financeiro", perfis: ["secretaria", "responsavel", "aluno"] },
+    { to: "/financeiro", label: "Financeiro", perfis: ["secretaria", "responsavel"] },
     {
       to: "/mensagens",
       label: "Mensagens",
