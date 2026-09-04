@@ -63,7 +63,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Painel() {
-  const { alunos, professores, turmas, agenda, notas, mensalidades, addEvento, removeEvento } =
+  const { alunos, professores, turmas, agenda, notas, addEvento, removeEvento } =
     useSchool();
   const navigate = useNavigate();
   const { usuario } = useAuth();
